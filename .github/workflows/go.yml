@@ -1,15 +1,34 @@
 name: Go
 
 on:
-  push: 
+  push:
     branches: [ "master" ]
   pull_request: 
     branches: [ "master" ]
 
-jobs: 
-  build:
+jobs:
+  build: 
     runs-on: ubuntu-latest
-    steps: 
+    strategy:
+      matrix:
+        include:
+          # Linux AMD64
+          - goos: linux
+            goarch:  amd64
+            output: wireguard-go-linux-amd64
+          
+          # Linux ARM64 (aarch64)
+          - goos: linux
+            goarch: arm64
+            output: wireguard-go-linux-arm64
+          
+          # Linux ARMv7
+          - goos: linux
+            goarch: arm
+            goarm: 7
+            output:  wireguard-go-linux-armv7
+    
+    steps:
     - uses: actions/checkout@v4
 
     - name: Set up Go
@@ -18,17 +37,18 @@ jobs:
         go-version-file: 'go.mod'
 
     - name: Build
-      run: |
-        go build -v -o wireguard-go 
-        # 或者如果有 main.go 在特定目录
-        # go build -v -o wireguard-go . 
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix. goarch }}
+        GOARM: ${{ matrix.goarm }}
+      run: go build -v -o ${{ matrix. output }}
 
-    - name: Test
-      run: go test -v ./... 
+    - name: Test (AMD64 only)
+      if: matrix.goarch == 'amd64'
+      run: go test -v ./...
 
-    # 🆕 上传构建产物
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name:  wireguard-go-linux-amd64
-        path: wireguard-go
+        name: ${{ matrix.output }}
+        path: ${{ matrix.output }}
