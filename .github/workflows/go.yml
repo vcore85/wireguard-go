@@ -19,7 +19,7 @@ jobs:
 
     - name: Build
       run: |
-        go build -v -o wireguard-go ./... 
+        go build -v -o wireguard-go 
         # 或者如果有 main.go 在特定目录
         # go build -v -o wireguard-go . 
 
